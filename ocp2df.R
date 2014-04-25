@@ -21,7 +21,12 @@ ocp2df <- function(datafilename) {
    chifile <- readLines(datafile, n = -1) #read all lines of input file
    close(datafile)
    #
-   sampleid <- ProvideSampleId(datafilename)
+   substrateid <- 
+      ProvideSampleId(datafilename, implementation="dirname")
+   sampleid <- 
+      paste(ProvideSampleId(datafilename, implementation="dirname"),
+            ProvideSampleId(datafilename, implementation="filename"),
+            sep = "-")
    #
    rgxp.number <- "^\\d+\\.\\d+"
    # regexp that matches a decimal number at the beginning of the line.
@@ -45,17 +50,45 @@ ocp2df <- function(datafilename) {
    # Fix the last index of end indices
    ends <- c(ends, length(numrow.idx))
    #
+   
+   # complicating issue: sometimes GPES software produces *.txt 
+   # with 2 cols (time, pot), 
+   # and sometimes with 3 cols (time, pot, charge)...
+   # take the first row containing numbers, and check how many "\t" it 
+   # contains, this number is the same as the number of columns
+   number.of.columns <- length(strsplit(chifile[starts[1]], "\t")[[1]])
+   
    ff <- data.frame(NULL)
    for (s in 1:length(starts)) {
       zz <- textConnection(chifile[starts[s]:ends[s]], "r")
       ff <- rbind(ff,
-               data.frame(sampleid,
-                  stringsAsFactors = FALSE,                  
-                  matrix(scan(zz, what = numeric(), sep = ""),
-                     ncol = 2, byrow = T)))
+               data.frame(substrateid,
+                          sampleid,
+                          stringsAsFactors = FALSE,                  
+                          matrix(scan(zz, 
+                                      what = numeric(), 
+                                      sep = ""),
+                                 ncol = number.of.columns, 
+                                 byrow = T)))
       close(zz)
    }
-   names(ff) <- c("sampleid", "time", "potential")
+   
+   # assign column names (depends on number of columns)
+   if (number.of.columns == 2) {
+      names(ff) <- 
+         c("substrateid", 
+           "sampleid",
+           "time", 
+           "potential")
+   }
+   if (number.of.columns == 3) {
+      names(ff) <- 
+         c("substrateid", 
+           "sampleid",
+           "time", 
+           "potential",
+           "charge")
+   }
    #
    return(ff)
 }

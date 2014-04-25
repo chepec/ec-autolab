@@ -29,7 +29,7 @@ amp2df <- function(datafilename, wearea = 1) {
    chifile <- readLines(datafile, n = -1) #read all lines of input file
    close(datafile)
    #
-   sampleid <- ProvideSampleId(datafilename)
+   sampleid <- ProvideSampleId(datafilename, implementation = "dirname")
    #
    rgxp.number <- "^\\d+\\.\\d+"
    # regexp that matches a decimal number at the beginning of the line.
@@ -64,9 +64,11 @@ amp2df <- function(datafilename, wearea = 1) {
       close(zz)
    }
    names(ff) <- c("sampleid", "time", "current")
+   
    # Calculate current density
    currentdensity <- ff$current / wearea
    ff <- cbind(ff, currentdensity = currentdensity)
+   
    # Calculate time diff and current diff
    timediff <- c(ff$time[1], diff(ff$time))
    currentdiff <- c(ff$current[1], diff(ff$current))
