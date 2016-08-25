@@ -3,7 +3,7 @@ source("/home/taha/chepec/chetex/common/R/common/ProvideSampleId.R")
 ##################################################
 #################### amp2df ######################
 ##################################################
-amp2df <- function(datafilename, wearea = 1) {
+amp2df <- function(datafilename, wearea = NA) {
    ## Description:
    ##   Reads current-time data (from AUTOLAB potentiostat)
    ##   and returns a dataframe with the data and some 
@@ -65,8 +65,12 @@ amp2df <- function(datafilename, wearea = 1) {
    }
    names(ff) <- c("sampleid", "time", "current")
    
-   # Calculate current density
-   currentdensity <- ff$current / wearea
+   # Calculate current density / mA
+   if (is.na(wearea)) {
+      currentdensity <- ff$current
+   } else {
+      currentdensity <- ff$current / wearea
+   }
    ff <- cbind(ff, currentdensity = currentdensity)
    
    # Calculate time diff and current diff
